@@ -58,7 +58,7 @@
   }
   .leaflet-control-attribution a { color: #58a6ff !important; }
 
-  /* Building popup styling */
+  /* Popup styling */
   .leaflet-popup-content-wrapper {
     background: #161b22;
     color: #e6edf3;
@@ -92,6 +92,7 @@
     text-transform: uppercase;
     margin-bottom: 1vh;
   }
+  .pop-tag.tree-tag { color: #7ee787; }
   .pop-row {
     display: flex;
     gap: 1vw;
@@ -109,41 +110,105 @@
     flex: 1;
   }
 
-  /* Legend bottom-right */
-  .legend {
+  /* PANEL: layers + filters + basemap, right side */
+  .panel {
     position: absolute;
-    bottom: 2vh;
+    top: 13vh;
     right: 2vw;
     background: rgba(13, 17, 23, 0.92);
     backdrop-filter: blur(8px);
     border: 1px solid #21262d;
     border-radius: 0.3vw;
-    padding: 1.2vh 1vw;
+    padding: 1.4vh 1.2vw;
     z-index: 500;
     font-size: 0.75vw;
+    width: 14vw;
   }
-  .legend-title {
+  .panel-section + .panel-section {
+    margin-top: 1.4vh;
+    padding-top: 1.4vh;
+    border-top: 1px solid #21262d;
+  }
+  .panel-title {
     font-size: 0.7vw;
     color: #7d8590;
     letter-spacing: 0.25em;
     text-transform: uppercase;
     margin-bottom: 1vh;
   }
-  .legend-row {
+
+  .toggle-row {
     display: flex;
     align-items: center;
     gap: 0.6vw;
-    margin-bottom: 0.5vh;
+    padding: 0.4vh 0;
+    cursor: pointer;
+    user-select: none;
   }
-  .legend-swatch {
+  .toggle-row input { display: none; }
+  .toggle-row .toggle-box {
+    width: 1.1vw;
+    height: 1.1vw;
+    border-radius: 0.15vw;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: #161b22;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .toggle-row input:checked + .toggle-box::after {
+    content: '✓';
+    position: absolute;
+    inset: 0;
+    color: #fff;
+    font-size: 0.8vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .toggle-row.disabled { opacity: 0.35; cursor: default; }
+
+  .toggle-row .swatch {
     width: 1.1vw;
     height: 1.1vw;
     border-radius: 0.15vw;
     border: 1px solid rgba(255,255,255,0.15);
     flex-shrink: 0;
   }
-  .legend-label {
+  .toggle-row .label {
     color: #c9d1d9;
+    flex: 1;
+  }
+  .toggle-row .count {
+    font-size: 0.7vw;
+    color: #6e7681;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .basemap-row {
+    display: flex;
+    gap: 0.4vw;
+    margin-top: 0.5vh;
+  }
+  .basemap-btn {
+    flex: 1;
+    background: #161b22;
+    border: 1px solid #30363d;
+    color: #c9d1d9;
+    padding: 0.7vh 0;
+    font-size: 0.7vw;
+    letter-spacing: 0.05em;
+    border-radius: 0.2vw;
+    cursor: pointer;
+    text-align: center;
+    font-family: inherit;
+    transition: background 0.15s;
+  }
+  .basemap-btn:hover { background: #21262d; }
+  .basemap-btn.active {
+    background: #58a6ff;
+    color: #0d1117;
+    border-color: #58a6ff;
+    font-weight: 500;
   }
 
   .loading {
@@ -165,125 +230,195 @@
 <header>
   <div>
     <div class="subhead">UBC Vancouver Campus</div>
-    <div class="heading">Buildings &amp; Spaces</div>
+    <div class="heading">Buildings &amp; Trees</div>
   </div>
   <div class="meta">
-    Data · <strong>UBCGeodata</strong> · <span id="count">—</span> buildings
+    <strong id="bldg-count">—</strong> buildings &nbsp;·&nbsp; <strong id="tree-count">—</strong> trees
   </div>
 </header>
 
 <div id="map"></div>
 
-<div class="legend">
-  <div class="legend-title">Building Type</div>
-  <div class="legend-row"><div class="legend-swatch" style="background:#58a6ff"></div><div class="legend-label">Academic</div></div>
-  <div class="legend-row"><div class="legend-swatch" style="background:#79c0ff"></div><div class="legend-label">Research</div></div>
-  <div class="legend-row"><div class="legend-swatch" style="background:#a371f7"></div><div class="legend-label">Housing</div></div>
-  <div class="legend-row"><div class="legend-swatch" style="background:#7ee787"></div><div class="legend-label">Athletics</div></div>
-  <div class="legend-row"><div class="legend-swatch" style="background:#e3b341"></div><div class="legend-label">Commons</div></div>
-  <div class="legend-row"><div class="legend-swatch" style="background:#39c5cf"></div><div class="legend-label">Administrative</div></div>
-  <div class="legend-row"><div class="legend-swatch" style="background:#f0883e"></div><div class="legend-label">Commercial</div></div>
-  <div class="legend-row"><div class="legend-swatch" style="background:#8b949e"></div><div class="legend-label">Services / Operations</div></div>
-  <div class="legend-row"><div class="legend-swatch" style="background:#484f58"></div><div class="legend-label">Parking</div></div>
+<div class="panel">
+  <div class="panel-section">
+    <div class="panel-title">Layers</div>
+    <label class="toggle-row" id="lyr-buildings-row">
+      <input type="checkbox" id="lyr-buildings" checked>
+      <span class="toggle-box"></span>
+      <span class="label">Buildings</span>
+    </label>
+    <label class="toggle-row" id="lyr-trees-row">
+      <input type="checkbox" id="lyr-trees">
+      <span class="toggle-box"></span>
+      <span class="label">Trees</span>
+    </label>
+  </div>
+
+  <div class="panel-section" id="bldg-filter-section">
+    <div class="panel-title">Building Filter</div>
+  </div>
+
+  <div class="panel-section">
+    <div class="panel-title">Basemap</div>
+    <div class="basemap-row">
+      <button class="basemap-btn active" data-basemap="dark">Dark</button>
+      <button class="basemap-btn" data-basemap="light">Light</button>
+      <button class="basemap-btn" data-basemap="water">Watercolor</button>
+    </div>
+  </div>
 </div>
 
 <div class="loading" id="loading">Loading campus map…</div>
 
 <script>
-const DATA_URL = 'https://raw.githubusercontent.com/UBCGeodata/ubc-geospatial-opendata/master/ubcv/locations/geojson/ubcv_buildings.geojson';
+const BUILDINGS_URL = 'https://raw.githubusercontent.com/UBCGeodata/ubc-geospatial-opendata/master/ubcv/locations/geojson/ubcv_buildings.geojson';
+const TREES_URL     = 'https://raw.githubusercontent.com/UBCGeodata/ubc-geospatial-opendata/master/ubcv/landscape/geojson/ubcv_trees.geojson';
 
-// UBC Vancouver center
 const UBC_CENTER = [49.2606, -123.2460];
 
-// Building colors by usage type — matches the actual BLDG_USAGE values
-// in the UBCGeodata buildings feed
+const USAGE_KEYS = [
+  'Academic', 'Research', 'Housing', 'StudentHousing',
+  'Athletics', 'Commons', 'Administrative', 'Commercial',
+  'Services', 'Operations', 'Parking', 'Other',
+];
+
+const USAGE_COLOR = {
+  Academic: '#58a6ff', Research: '#79c0ff',
+  Housing: '#a371f7', StudentHousing: '#bc8cff',
+  Athletics: '#7ee787', Commons: '#e3b341',
+  Administrative: '#39c5cf', Commercial: '#f0883e',
+  Services: '#8b949e', Operations: '#6e7681',
+  Parking: '#484f58', Other: '#8b949e',
+};
+
+const USAGE_LABEL = {
+  Academic: 'Academic', Research: 'Research',
+  Housing: 'Housing', StudentHousing: 'Student Housing',
+  Athletics: 'Athletics', Commons: 'Commons',
+  Administrative: 'Administrative', Commercial: 'Commercial',
+  Services: 'Services', Operations: 'Operations',
+  Parking: 'Parking', Other: 'Other',
+};
+
+const BASEMAPS = {
+  dark:  () => L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap, © CARTO', subdomains: 'abcd', maxZoom: 19,
+  }),
+  light: () => L.tileLayer('https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap, © CARTO', subdomains: 'abcd', maxZoom: 19,
+  }),
+  water: () => L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg', {
+    attribution: '© Stadia Maps, © Stamen Design, © OpenStreetMap', maxZoom: 18,
+  }),
+};
+
+let map;
+let currentBasemap;
+let buildingsLayer;
+let treesLayer;
+let allBuildings = [];
+let activeUsages = new Set(USAGE_KEYS);
+
 function styleFor(usage) {
-  switch (usage) {
-    case 'Academic':
-      return { fill: '#58a6ff', stroke: '#58a6ff' };  // bright blue
-    case 'Research':
-      return { fill: '#79c0ff', stroke: '#79c0ff' };  // lighter blue
-    case 'Housing':
-    case 'StudentHousing':
-      return { fill: '#a371f7', stroke: '#a371f7' };  // purple
-    case 'Athletics':
-      return { fill: '#7ee787', stroke: '#7ee787' };  // green
-    case 'Commons':
-      return { fill: '#e3b341', stroke: '#e3b341' };  // amber
-    case 'Administrative':
-      return { fill: '#39c5cf', stroke: '#39c5cf' };  // teal
-    case 'Commercial':
-      return { fill: '#f0883e', stroke: '#f0883e' };  // orange
-    case 'Parking':
-      return { fill: '#484f58', stroke: '#484f58' };  // dark gray
-    case 'Services':
-    case 'Operations':
-    case 'Other':
-    default:
-      return { fill: '#8b949e', stroke: '#8b949e' };  // light gray
-  }
+  const c = USAGE_COLOR[usage] || USAGE_COLOR.Other;
+  return { color: c, weight: 1, opacity: 0.85, fillColor: c, fillOpacity: 0.5 };
 }
 
 async function init() {
-  const map = L.map('map', {
-    zoomControl: true,
-    attributionControl: true,
-  }).setView(UBC_CENTER, 15);
+  map = L.map('map', { zoomControl: true, attributionControl: true })
+        .setView(UBC_CENTER, 15);
 
-  // CARTO Dark Matter basemap
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '© OpenStreetMap, © CARTO',
-    subdomains: 'abcd',
-    maxZoom: 19,
-  }).addTo(map);
+  setBasemap('dark');
 
-  // Load building footprints
-  try {
-    const res = await fetch(DATA_URL);
-    const data = await res.json();
-    drawBuildings(map, data);
-    document.getElementById('count').textContent = (data.features || []).length;
-    document.getElementById('loading').classList.add('hidden');
-  } catch (e) {
-    console.error('Building data load failed:', e);
-    document.getElementById('loading').textContent = 'Unable to load building data.';
+  buildingsLayer = L.layerGroup().addTo(map);
+
+  const [bResp, tResp] = await Promise.allSettled([
+    fetch(BUILDINGS_URL).then(r => r.json()),
+    fetch(TREES_URL).then(r => r.json()),
+  ]);
+
+  if (bResp.status === 'fulfilled') {
+    allBuildings = bResp.value.features || [];
+    renderBuildings();
+    renderBuildingFilters();
+    document.getElementById('bldg-count').textContent = allBuildings.length;
+  } else {
+    console.error('Buildings failed:', bResp.reason);
+    document.getElementById('bldg-count').textContent = 'err';
   }
+
+  if (tResp.status === 'fulfilled') {
+    const treeFeatures = tResp.value.features || [];
+    console.log('Tree feature sample:', treeFeatures[0]);
+    treesLayer = buildTreesLayer(treeFeatures);
+    document.getElementById('tree-count').textContent = treeFeatures.length.toLocaleString();
+  } else {
+    console.error('Trees failed:', tResp.reason);
+    document.getElementById('tree-count').textContent = 'unavailable';
+    document.getElementById('lyr-trees-row').classList.add('disabled');
+    document.getElementById('lyr-trees').disabled = true;
+  }
+
+  document.getElementById('loading').classList.add('hidden');
+  wireLayerToggles();
+  wireBasemapButtons();
 }
 
-function drawBuildings(map, geojson) {
-  // Diagnostic — log all unique BLDG_USAGE values we see
-  const usageValues = {};
-  (geojson.features || []).forEach(f => {
-    const u = f.properties?.BLDG_USAGE || '(null)';
-    usageValues[u] = (usageValues[u] || 0) + 1;
+function setBasemap(key) {
+  if (currentBasemap) map.removeLayer(currentBasemap);
+  currentBasemap = BASEMAPS[key]().addTo(map);
+  document.querySelectorAll('.basemap-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.basemap === key);
   });
-  console.log('Unique BLDG_USAGE values:', usageValues);
+}
 
-  L.geoJSON(geojson, {
-    style: feature => {
-      const s = styleFor(feature.properties.BLDG_USAGE);
-      return {
-        color: s.stroke,
-        weight: 1,
-        opacity: 0.85,
-        fillColor: s.fill,
-        fillOpacity: 0.5,
-      };
-    },
+function renderBuildings() {
+  buildingsLayer.clearLayers();
+  const filtered = {
+    type: 'FeatureCollection',
+    features: allBuildings.filter(f => {
+      const u = f.properties?.BLDG_USAGE || 'Other';
+      return activeUsages.has(u);
+    }),
+  };
+  const geo = L.geoJSON(filtered, {
+    style: f => styleFor(f.properties?.BLDG_USAGE || 'Other'),
     onEachFeature: (feature, layer) => {
       const p = feature.properties || {};
-      layer.bindPopup(buildPopup(p), { maxWidth: 320 });
+      layer.bindPopup(buildBldgPopup(p), { maxWidth: 320 });
       layer.on({
         mouseover: e => e.target.setStyle({ weight: 2.5, fillOpacity: 0.75 }),
         mouseout:  e => e.target.setStyle({ weight: 1,   fillOpacity: 0.5  }),
       });
     },
-  }).addTo(map);
+  });
+  buildingsLayer.addLayer(geo);
 }
 
-function buildPopup(p) {
+function buildTreesLayer(features) {
+  // Canvas renderer for performance — many points
+  const canvasRenderer = L.canvas({ padding: 0.5 });
+  const treeFC = { type: 'FeatureCollection', features };
+
+  return L.geoJSON(treeFC, {
+    pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
+      renderer: canvasRenderer,
+      radius:   2,
+      color:    '#7ee787',
+      weight:   0,
+      fillColor:'#7ee787',
+      fillOpacity: 0.7,
+    }),
+    onEachFeature: (feature, layer) => {
+      const p = feature.properties || {};
+      layer.bindPopup(buildTreePopup(p), { maxWidth: 280 });
+    },
+  });
+}
+
+function buildBldgPopup(p) {
   const name = p.NAME || p.SHORTNAME || 'Unnamed Building';
-  const usage = humanUsage(p.BLDG_USAGE);
+  const usage = USAGE_LABEL[p.BLDG_USAGE] || p.BLDG_USAGE || '';
   const addr = p.PRIMARY_ADDRESS || '—';
   const neigh = p.NEIGHBOURHOOD || '';
   const floors = p.MAX_FLOORS != null ? p.MAX_FLOORS : null;
@@ -300,26 +435,79 @@ function buildPopup(p) {
   return html;
 }
 
-function humanUsage(u) {
-  const map = {
-    Academic:       'Academic',
-    Research:       'Research',
-    Housing:        'Housing',
-    StudentHousing: 'Student Housing',
-    Athletics:      'Athletics',
-    Commons:        'Commons',
-    Administrative: 'Administrative',
-    Commercial:     'Commercial',
-    Parking:        'Parking',
-    Services:       'Services',
-    Operations:     'Operations',
-    Other:          'Other',
-  };
-  return map[u] || u || '';
+function buildTreePopup(p) {
+  // Tree feed field names vary — show what's there
+  const species = p.SPECIES || p.species || p.TREE_TYPE || p.tree_type || p.COMMON_NAME || p.common_name;
+  const sci     = p.SCI_NAME || p.scientific_name || p.LATIN_NAME;
+  const dbh     = p.DBH || p.dbh || p.DIAMETER;
+  const height  = p.HEIGHT || p.height;
+  const cond    = p.CONDITION || p.condition;
+
+  let html = `<div class="pop-name">${escapeHtml(species || 'Tree')}</div>`;
+  html += `<div class="pop-tag tree-tag">Landscape</div>`;
+  if (sci)    html += `<div class="pop-row"><div class="pop-label">Species</div><div class="pop-value"><em>${escapeHtml(sci)}</em></div></div>`;
+  if (dbh)    html += `<div class="pop-row"><div class="pop-label">Diameter</div><div class="pop-value">${escapeHtml(String(dbh))} cm</div></div>`;
+  if (height) html += `<div class="pop-row"><div class="pop-label">Height</div><div class="pop-value">${escapeHtml(String(height))} m</div></div>`;
+  if (cond)   html += `<div class="pop-row"><div class="pop-label">Condition</div><div class="pop-value">${escapeHtml(String(cond))}</div></div>`;
+  if (!species && !sci && !dbh && !height && !cond) {
+    html += `<div class="pop-row"><div class="pop-value" style="color:#7d8590">No additional data</div></div>`;
+  }
+  return html;
+}
+
+function renderBuildingFilters() {
+  const counts = {};
+  allBuildings.forEach(f => {
+    const u = f.properties?.BLDG_USAGE || 'Other';
+    counts[u] = (counts[u] || 0) + 1;
+  });
+
+  const container = document.getElementById('bldg-filter-section');
+  let html = '<div class="panel-title">Building Filter</div>';
+  USAGE_KEYS.forEach(u => {
+    const count = counts[u] || 0;
+    if (count === 0) return;
+    html += `
+      <label class="toggle-row" data-usage="${u}">
+        <input type="checkbox" checked>
+        <span class="swatch" style="background:${USAGE_COLOR[u]}"></span>
+        <span class="label">${USAGE_LABEL[u]}</span>
+        <span class="count">${count}</span>
+      </label>
+    `;
+  });
+  container.innerHTML = html;
+
+  container.querySelectorAll('.toggle-row').forEach(row => {
+    const input = row.querySelector('input');
+    input.addEventListener('change', () => {
+      const usage = row.dataset.usage;
+      if (input.checked) activeUsages.add(usage);
+      else activeUsages.delete(usage);
+      renderBuildings();
+    });
+  });
+}
+
+function wireLayerToggles() {
+  document.getElementById('lyr-buildings').addEventListener('change', e => {
+    if (e.target.checked) buildingsLayer.addTo(map);
+    else map.removeLayer(buildingsLayer);
+  });
+  document.getElementById('lyr-trees').addEventListener('change', e => {
+    if (!treesLayer) return;
+    if (e.target.checked) treesLayer.addTo(map);
+    else map.removeLayer(treesLayer);
+  });
+}
+
+function wireBasemapButtons() {
+  document.querySelectorAll('.basemap-btn').forEach(btn => {
+    btn.addEventListener('click', () => setBasemap(btn.dataset.basemap));
+  });
 }
 
 function formatOccupancyDate(s) {
-  // OCCU_DATE looks like "19680101"
   if (!s || s.length < 4) return '';
   const y = s.slice(0, 4);
   const m = s.slice(4, 6);
