@@ -176,11 +176,15 @@
 
 <div class="legend">
   <div class="legend-title">Building Type</div>
-  <div class="legend-row"><div class="legend-swatch" style="background:#58a6ff"></div><div class="legend-label">Academic / Campus</div></div>
-  <div class="legend-row"><div class="legend-swatch" style="background:#a371f7"></div><div class="legend-label">Student Housing</div></div>
-  <div class="legend-row"><div class="legend-swatch" style="background:#f0883e"></div><div class="legend-label">Residential</div></div>
-  <div class="legend-row"><div class="legend-swatch" style="background:#7ee787"></div><div class="legend-label">Athletic / Recreation</div></div>
-  <div class="legend-row"><div class="legend-swatch" style="background:#8b949e"></div><div class="legend-label">Other</div></div>
+  <div class="legend-row"><div class="legend-swatch" style="background:#58a6ff"></div><div class="legend-label">Academic</div></div>
+  <div class="legend-row"><div class="legend-swatch" style="background:#79c0ff"></div><div class="legend-label">Research</div></div>
+  <div class="legend-row"><div class="legend-swatch" style="background:#a371f7"></div><div class="legend-label">Housing</div></div>
+  <div class="legend-row"><div class="legend-swatch" style="background:#7ee787"></div><div class="legend-label">Athletics</div></div>
+  <div class="legend-row"><div class="legend-swatch" style="background:#e3b341"></div><div class="legend-label">Commons</div></div>
+  <div class="legend-row"><div class="legend-swatch" style="background:#39c5cf"></div><div class="legend-label">Administrative</div></div>
+  <div class="legend-row"><div class="legend-swatch" style="background:#f0883e"></div><div class="legend-label">Commercial</div></div>
+  <div class="legend-row"><div class="legend-swatch" style="background:#8b949e"></div><div class="legend-label">Services / Operations</div></div>
+  <div class="legend-row"><div class="legend-swatch" style="background:#484f58"></div><div class="legend-label">Parking</div></div>
 </div>
 
 <div class="loading" id="loading">Loading campus map…</div>
@@ -191,22 +195,32 @@ const DATA_URL = 'https://raw.githubusercontent.com/UBCGeodata/ubc-geospatial-op
 // UBC Vancouver center
 const UBC_CENTER = [49.2606, -123.2460];
 
-// Building colors by usage type
+// Building colors by usage type — matches the actual BLDG_USAGE values
+// in the UBCGeodata buildings feed
 function styleFor(usage) {
-  switch ((usage || '').toLowerCase()) {
-    case 'studenthousing':
-      return { fill: '#a371f7', stroke: '#a371f7' };
-    case 'residential':
-      return { fill: '#f0883e', stroke: '#f0883e' };
-    case 'athletic':
-    case 'recreation':
-    case 'athleticbuilding':
-      return { fill: '#7ee787', stroke: '#7ee787' };
-    case 'campusbuilding':
-    case 'academic':
-      return { fill: '#58a6ff', stroke: '#58a6ff' };
+  switch (usage) {
+    case 'Academic':
+      return { fill: '#58a6ff', stroke: '#58a6ff' };  // bright blue
+    case 'Research':
+      return { fill: '#79c0ff', stroke: '#79c0ff' };  // lighter blue
+    case 'Housing':
+    case 'StudentHousing':
+      return { fill: '#a371f7', stroke: '#a371f7' };  // purple
+    case 'Athletics':
+      return { fill: '#7ee787', stroke: '#7ee787' };  // green
+    case 'Commons':
+      return { fill: '#e3b341', stroke: '#e3b341' };  // amber
+    case 'Administrative':
+      return { fill: '#39c5cf', stroke: '#39c5cf' };  // teal
+    case 'Commercial':
+      return { fill: '#f0883e', stroke: '#f0883e' };  // orange
+    case 'Parking':
+      return { fill: '#484f58', stroke: '#484f58' };  // dark gray
+    case 'Services':
+    case 'Operations':
+    case 'Other':
     default:
-      return { fill: '#8b949e', stroke: '#8b949e' };
+      return { fill: '#8b949e', stroke: '#8b949e' };  // light gray
   }
 }
 
@@ -288,11 +302,18 @@ function buildPopup(p) {
 
 function humanUsage(u) {
   const map = {
-    CampusBuilding: 'Campus Building',
+    Academic:       'Academic',
+    Research:       'Research',
+    Housing:        'Housing',
     StudentHousing: 'Student Housing',
-    Residential: 'Residential',
-    OtherBuilding: 'Other',
-    AthleticBuilding: 'Athletic',
+    Athletics:      'Athletics',
+    Commons:        'Commons',
+    Administrative: 'Administrative',
+    Commercial:     'Commercial',
+    Parking:        'Parking',
+    Services:       'Services',
+    Operations:     'Operations',
+    Other:          'Other',
   };
   return map[u] || u || '';
 }
