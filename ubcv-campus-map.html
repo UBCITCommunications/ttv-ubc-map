@@ -263,7 +263,7 @@
     <div class="basemap-row">
       <button class="basemap-btn active" data-basemap="dark">Dark</button>
       <button class="basemap-btn" data-basemap="light">Light</button>
-      <button class="basemap-btn" data-basemap="water">Watercolor</button>
+      <button class="basemap-btn" data-basemap="topo">Topo</button>
     </div>
   </div>
 </div>
@@ -272,7 +272,7 @@
 
 <script>
 const BUILDINGS_URL = 'https://raw.githubusercontent.com/UBCGeodata/ubc-geospatial-opendata/master/ubcv/locations/geojson/ubcv_buildings.geojson';
-const TREES_URL     = 'https://raw.githubusercontent.com/UBCGeodata/ubc-geospatial-opendata/master/ubcv/landscape/geojson/ubcv_trees.geojson';
+const TREES_URL     = 'https://raw.githubusercontent.com/UBCGeodata/ubc-geospatial-opendata/master/ubcv/landscape/geojson/ubcv_campus_trees.geojson';
 
 const UBC_CENTER = [49.2606, -123.2460];
 
@@ -307,8 +307,8 @@ const BASEMAPS = {
   light: () => L.tileLayer('https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}{r}.png', {
     attribution: '© OpenStreetMap, © CARTO', subdomains: 'abcd', maxZoom: 19,
   }),
-  water: () => L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg', {
-    attribution: '© Stadia Maps, © Stamen Design, © OpenStreetMap', maxZoom: 18,
+  topo:  () => L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap, © OpenTopoMap', subdomains: 'abc', maxZoom: 17,
   }),
 };
 
