@@ -400,20 +400,40 @@ function buildTreesLayer(features) {
   const canvasRenderer = L.canvas({ padding: 0.5 });
   const treeFC = { type: 'FeatureCollection', features };
 
-  return L.geoJSON(treeFC, {
+  const layer = L.geoJSON(treeFC, {
     pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
       renderer: canvasRenderer,
-      radius:   2,
+      radius:   radiusForZoom(map.getZoom()),
       color:    '#7ee787',
       weight:   0,
       fillColor:'#7ee787',
-      fillOpacity: 0.7,
+      fillOpacity: 0.75,
+      // tolerance bumps the invisible click target larger than the visual
+      bubblingMouseEvents: false,
     }),
     onEachFeature: (feature, layer) => {
       const p = feature.properties || {};
-      layer.bindPopup(buildTreePopup(p), { maxWidth: 280 });
+      layer.bindPopup(buildTreePopup(p), { maxWidth: 300 });
     },
   });
+
+  // Resize tree dots when the user zooms
+  map.on('zoomend', () => {
+    if (!map.hasLayer(layer)) return;
+    const r = radiusForZoom(map.getZoom());
+    layer.eachLayer(m => m.setRadius(r));
+  });
+
+  return layer;
+}
+
+function radiusForZoom(z) {
+  // z 14 (city) → 2px, z 17+ (block) → 6px, smooth-ish
+  if (z >= 18) return 7;
+  if (z >= 17) return 6;
+  if (z >= 16) return 4;
+  if (z >= 15) return 3;
+  return 2;
 }
 
 function buildBldgPopup(p) {
